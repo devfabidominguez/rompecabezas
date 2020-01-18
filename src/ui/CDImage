@@ -1,0 +1,6 @@
+import *  as  phaser from 'phaser';
+
+export class CDImage extends phaser.GameObjects.Image 
+{
+    
+}
