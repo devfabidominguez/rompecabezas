@@ -110,13 +110,9 @@ export class LoadingScene extends Phaser.Scene {
     this.load.image("carta-hembra", "assets/Carta-01-A.png");
     this.load.image("carta-macho", "assets/Carta-01-B.png");
 
-    // this.load.image("logo", "assets/logo.png");
-
     this.load.audio("button-generic", "assets/sounds/Button_generic.wav");
     this.load.audio("validation-negative", "assets/sounds/Validation_Negative.wav");
     this.load.audio("validation-positive", "assets/sounds/Validation_Positive.wav");
-    this.load.audio("trace-error", "assets/sounds/Trace_Error.wav");
-    this.load.audio("trace-finished", "assets/sounds/Trace_Finished.wav");
     this.load.audio("level-finished", "assets/sounds/Level_Finished.wav");
 
     this.load.image("Carta_Hard1_Down", "assets/Carta_Hard1_Down.png");

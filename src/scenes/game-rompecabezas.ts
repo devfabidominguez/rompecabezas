@@ -1,12 +1,5 @@
-import { CANVAS, Input, Tweens, GameObjects } from "phaser";
-import { getGameHeight, getGameWidth } from "../helpers";
-import * as Main from "../helpers";
-import { Button } from "../ui/menu-button";
 import { HorizontalContainer } from "../ui/horizontalContainer";
-import { Trace } from "../ui/trace";
-import { TraceExport } from "../ui/traceExport";
 import { AlignGrid } from "../utils/alignGrid.js";
-import { Editor } from "./editor-scene";
 import { UIUtils } from "./../utils/UIUtils";
 
 
@@ -18,8 +11,6 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 
 let markerDrawStarted: boolean;
 
-const maxTracesID = 4;
-
 export class GameScene extends Phaser.Scene {
 
   public checkButton: Phaser.GameObjects.Image;
@@ -29,28 +20,16 @@ export class GameScene extends Phaser.Scene {
   public flagHelpButton: Phaser.GameObjects.Image;
 
   public inGameMenuSpawnedButtonsHorzontalContainer: HorizontalContainer;
-  public spawnedCardsContainer: HorizontalContainer;
   public spawnedCards: Phaser.GameObjects.Image[];
   public inGameMenuSpawnedButtons: Phaser.GameObjects.Image[];
 
-  public wasPointerLastPositionSaved: boolean;
-
-  public isMouseOverMarker: boolean;
   public canClickNextLevelButton: boolean;
-  public checkButtonState: string;
 
   public loseCounter: number;
 
-  public aGrid: AlignGrid;
-
-  public shape: Phaser.GameObjects.Graphics[];
-
   public checkButtonDown: boolean;
-  public letterTraceValidated: boolean;
   public topBanner: Phaser.GameObjects.Image;
   public topBannerText: Phaser.GameObjects.Text;
-
-  public progressBarContainer: Phaser.GameObjects.Rectangle;
 
   public background: Phaser.GameObjects.Image;
 
@@ -59,8 +38,6 @@ export class GameScene extends Phaser.Scene {
   public soundButtonGeneric: Phaser.Sound.BaseSound;
   public soundValidationPositive: Phaser.Sound.BaseSound;
   public soundValidationNegative: Phaser.Sound.BaseSound;
-  public soundTraceError: Phaser.Sound.BaseSound;
-  public soundTraceFinished: Phaser.Sound.BaseSound;
   public nonGameplaySounds: Phaser.Sound.BaseSound[];
   public isNonGameplaySoundAble: boolean;
 
@@ -71,6 +48,7 @@ export class GameScene extends Phaser.Scene {
   public motherCard: Phaser.GameObjects.Image;
   public slot: Phaser.Math.Vector2;
   public bIsInterpolationHappening: boolean;
+
   public interpolationSpeed: number;
   public interpolationTime: number;
   public interpolationCurrentTime: number;
@@ -90,7 +68,6 @@ export class GameScene extends Phaser.Scene {
   public initializeArraysAndProperties() {
     this.spawnedCards = new Array();
     this.checkButtonDown = false;
-    this.letterTraceValidated = false;
     markerDrawStarted = false;
     this.loseCounter = 0;
     this.isNonGameplaySoundAble = true;
@@ -114,18 +91,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   public initializeSounds() {
-    this.nonGameplaySounds = new Array(5);
+    this.nonGameplaySounds = new Array(3);
     this.soundButtonGeneric = this.sound.add("button-generic");
     this.soundValidationPositive = this.sound.add("validation-positive");
     this.soundValidationNegative = this.sound.add("validation-negative");
-    this.soundTraceError = this.sound.add("trace-error");
-    this.soundTraceFinished = this.sound.add("trace-finished");
 
     this.nonGameplaySounds[0] = this.soundButtonGeneric;
     this.nonGameplaySounds[1] = this.soundValidationPositive;
     this.nonGameplaySounds[2] = this.soundValidationNegative;
-    this.nonGameplaySounds[3] = this.soundTraceError;
-    this.nonGameplaySounds[4] = this.soundTraceFinished;
   }
 
   public startGame() {
@@ -356,7 +329,6 @@ export class GameScene extends Phaser.Scene {
     this.helpButton.alpha = 1;
     this.inGameMenuViewport.destroy();
     this.isMouseOverUIButton = false;
-    // this.spawnedCardsContainer.horizontalContainer.alpha = 1;
     this.topBanner.alpha = 1;
     this.topBannerText.alpha = 1;
 
@@ -397,7 +369,7 @@ export class GameScene extends Phaser.Scene {
       .on("pointerover", () => { this.isMouseOverUIButton = true; })
       .on("pointerout", () => { this.isMouseOverUIButton = false; })
       .on("pointerdown", () => {
-        if (this.letterTraceValidated === false) {
+        if (true) {
           this.checkButtonDown = true;
           this.updateButtonState(true);
           this.onPointerClickCheck();
@@ -451,17 +423,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   public onPointerClickCheck() {
-
-    // This validated in TrazandoLetras if trace was started 
-    // if (this.currentConfigID === 0) {
-    //   return;
-    // }
-
-    // Already Validated so do nothing
-    if (this.letterTraceValidated === true) {
-      return;
-    }
-
     if (!this.canWinTheGame()) {
       // On Check Fail maybe should contain the play sound and the delay to animate
       this.soundValidationNegative.play();
@@ -479,8 +440,6 @@ export class GameScene extends Phaser.Scene {
     // letters[letters.length] = this.startLetter;
     // letters[letters.length] = this.startLetterPainted;
 
-    // this.shape[this.shape.length - 1].fillRect(0, 0, this.game.scale.baseSize.width, this.game.scale.baseSize.height);
-
     // this.lettersValidatedTween = this.tweens.add({
     //   targets: letters,
     //   // tslint:disable-next-line: object-literal-sort-keys
@@ -493,40 +452,6 @@ export class GameScene extends Phaser.Scene {
     //   loop: 0,
     //   onComplete: this.onCompleteLettersTween.bind(this),
     // });
-  }
-
-  public onCompleteLettersTween() {
-    // const letters = new Array();
-    // letters[letters.length] = this.startLetter;
-    // letters[letters.length] = this.startLetterPainted;
-
-    // this.lettersValidatedTween = this.tweens.add({
-    //   targets: letters,
-    //   // tslint:disable-next-line: object-literal-sort-keys
-    //   props: {
-    //     scaleX: { value: 1, ease: "Lineal" },
-    //     scaleY: { value: 1, ease: "Lineal" },
-    //   },
-    //   duration: 500,
-    //   repeat: 0,
-    //   loop: 0,
-    //   onComplete: this.onPostCompleteLettersTween.bind(this),
-    // });
-  }
-
-  public onPostCompleteLettersTween() {
-    this.nextLevelButton.alpha = 1;
-    this.canClickNextLevelButton = true;
-  }
-
-  public isMouseOverAnyTraceControlPoint(): boolean {
-    // tslint:disable-next-line: max-line-length
-    // const foundElement = this.currentConfigTraces.find((element: { isMouseOverControlPoint: boolean; }) => element.isMouseOverControlPoint === true);
-
-    // if (foundElement !== undefined) {
-    //   return true;
-    // }
-    return false;
   }
 
   public createMotherCard(worldCenterX: number, worldCenterY: number) {
@@ -592,6 +517,7 @@ export class GameScene extends Phaser.Scene {
       this.spawnedCards[this.spawnedCards.length] = card;
       card.depth = 0;
       card.setInteractive();
+
       card.on("pointerdown", () => {
         if (this.bIsInterpolationHappening === true) {
           return;
@@ -600,8 +526,9 @@ export class GameScene extends Phaser.Scene {
         this.draggedObject = card;
         this.draggedObjectOriginalPosition.x = card.x;
         this.draggedObjectOriginalPosition.y = card.y;
-      })
-        .on("pointerup", () => {
+      });
+
+      card.on("pointerup", () => {
           if (markerDrawStarted === true) {
             this.bIsInterpolationHappening = true;
             this.interpolationCurrentTime = 0;
@@ -611,12 +538,14 @@ export class GameScene extends Phaser.Scene {
 
             if (this.isInsideDropZone(this.game.input.activePointer.y)) {
               this.draggedObjectPositionToGo = this.slot;
+              
             } else {
               this.draggedObjectPositionToGo = this.draggedObjectOriginalPosition;
             }
           }
-        })
-        .on("pointeroout", () => {
+        });
+
+      card.on("pointeroout", () => {
           markerDrawStarted = false;
         });
       card.setScale(this.game.scale.baseSize.width / 1920 / 2.5);
@@ -630,28 +559,8 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  public onMarkerPointerDown() {
-    this.wasPointerLastPositionSaved = false;
-    markerDrawStarted = true;
-  }
-
   public update(time: number, delta: number) {
     super.update(delta, time);
-    // Trazando Letras Behaviour
-
-
-    // Debug Traces. Maybe we should have a debug class which can debug objects? whatever...
-    // this.currentConfigTraces.forEach((trace) => {
-    //   // trace.drawTrace();
-    // });
-
-    // if (this.isShowingHelp) {
-    //   this.updateHelp(delta);
-    // } else {
-    //   this.updateInterpolation(delta);
-    //   this.updateGame(time, delta);
-    // }
-
     this.updateInterpolation(delta);
     this.updateGame(time, delta);
   }
@@ -685,19 +594,6 @@ export class GameScene extends Phaser.Scene {
     // Phaser.Actions.RotateAroundDistance(asd, {x : 0, y:0}, )
     if (this.game.input.activePointer.isDown && markerDrawStarted) {
       this.dragObject(time, delta);
-    }
-
-    if (!this.game.input.activePointer.isDown) {
-      if (markerDrawStarted) {
-        // this.wasPointerLastPositionSaved = false;
-
-        // const trace = this.currentConfigTraces[this.currentConfigID];
-        // if (trace !== undefined && trace.path.t !== 1 && this.isShowingHelp === false) {
-        //   // tslint:disable-next-line: prefer-for-of
-        //   this.startLetterPainted.mask = this.shape[this.currentConfigID].createGeometryMask();
-        //   this.onPlayerLost();
-        // }
-      }
     }
   }
 

@@ -25,20 +25,13 @@ export class MainMenuScene extends Phaser.Scene {
     const windowInnerHeight = window.innerHeight * window.devicePixelRatio;
     const worldCenterX = windowInnerWidth / 2;
     const worldCenterY = windowInnerHeight / 2;
-    const button = new MenuButton(this, worldCenterX, worldCenterY, "Trazando Letras", () => {
-      this.scene.start("Game-TrazandoLetras");
+    const button = new MenuButton(this, worldCenterX, worldCenterY, "Rompecabezas", () => {
+      this.scene.start("Game-Rompecabezas");
       this.scene.stop("MainMenu");
     });
     button.y -= button.height / 2;
     button.x -= button.width / 2;
     button.setLabelPos(button.x, button.y);
-
-    // var test = new MenuButton(this, worldCenterX, worldCenterY, 'Rompecabezas', () => {
-    //   this.scene.start('Game-Rompecabezas');
-    // });
-    // test.y -= button.height / 2 * 3;
-    // test.x -= button.width / 2;
-    // test.setLabelPos(test.x,test.y);
 
     const button2 = new MenuButton(this, worldCenterX, worldCenterY, "Editor", () => {
       this.scene.start("Editor");
@@ -48,8 +41,5 @@ export class MainMenuScene extends Phaser.Scene {
     button2.y += button.height / 2;
     button2.x -= button.width / 2;
     button2.setLabelPos(button2.x, button2.y);
-
-    // new Button(this, 1130, 600, "FullSc", ()=>{
-    // });
   }
 }
