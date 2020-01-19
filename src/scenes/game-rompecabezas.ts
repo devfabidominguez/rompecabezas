@@ -1,5 +1,4 @@
 import { HorizontalContainer } from "../ui/horizontalContainer";
-import { AlignGrid } from "../utils/alignGrid.js";
 import { UIUtils } from "./../utils/UIUtils";
 
 
@@ -142,7 +141,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   public createUI() {
-
     this.isMouseOverUIButton = false;
 
     this.topBanner = this.add.image(0, 0, "soporte");
@@ -156,11 +154,10 @@ export class GameScene extends Phaser.Scene {
     this.topBannerText = this.add.text(
       this.game.scale.baseSize.width / 2,
       0,
-      "Sigue el trazado marcado para dibujar la linea correspondiente", {
+      "Encuentra la mitad correcta!", {
+      color: "#FFFFFf",
       fontFamily: "Verdana",
       fontSize: this.game.scale.baseSize.width / 75,
-      // tslint:disable-next-line: object-literal-sort-keys
-      color: "#FFFFFf",
     },
     );
     this.topBannerText.x -= this.topBannerText.displayWidth / 2;
@@ -257,8 +254,7 @@ export class GameScene extends Phaser.Scene {
       for (let i = 0; i < this.nonGameplaySounds.length; i++) {
         this.nonGameplaySounds[i].stop();
       }
-    }
-    else {
+    } else {
       this.isNonGameplaySoundAble = true;
     }
   }
@@ -273,10 +269,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   public setCardsAlpha(alphaValue: number) {
-    for (let i = 0; i < this.spawnedCards.length; i++) {
-      this.spawnedCards[i].alpha = alphaValue;
+    for (const spawnedCard of this.spawnedCards){
+      spawnedCard.alpha = alphaValue;
     }
-
     this.motherCard.alpha = alphaValue;
   }
 
@@ -319,9 +314,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   public closeInGameMenu() {
-    // tslint:disable-next-line: prefer-for-of
-    for (let i = 0; i < this.inGameMenuSpawnedButtons.length; i++) {
-      this.inGameMenuSpawnedButtons[i].destroy();
+    for (const spawnedButton of this.inGameMenuSpawnedButtons) {
+      spawnedButton.destroy();
     }
 
     this.gameplayContainer.alpha = 1;
@@ -498,19 +492,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   public destroyCards() {
-    for (let i = 0; i < this.spawnedCards.length; i++) {
-      if (this.spawnedCards[i] != null) {
-        this.spawnedCards[i].destroy();
-      }
+    for (const spawnedCard of this.spawnedCards) {
+      spawnedCard.destroy();
     }
-
     if (this.motherCard != null) {
       this.motherCard.destroy();
     }
   }
 
   public spawnLevelCards(cardsToSpawn: number) {
-    // tslint:disable-next-line: max-line-length
     const halfObjects = cardsToSpawn / 2;
     for (let i = 0; i < cardsToSpawn; i++) {
       const card = this.add.image(0, 0, "carta-macho", 0);
@@ -538,7 +528,6 @@ export class GameScene extends Phaser.Scene {
 
             if (this.isInsideDropZone(this.game.input.activePointer.y)) {
               this.draggedObjectPositionToGo = this.slot;
-              
             } else {
               this.draggedObjectPositionToGo = this.draggedObjectOriginalPosition;
             }
@@ -574,10 +563,12 @@ export class GameScene extends Phaser.Scene {
     }
     this.interpolationCurrentTime += delta / 1000;
     this.interpolationCurrentTime = Phaser.Math.Clamp(this.interpolationCurrentTime, 0, this.interpolationCurrentTime);
-    // tslint:disable-next-line: max-line-length
-    const xPosition = Phaser.Math.Linear(this.draggedObjectStopPosition.x, this.draggedObjectPositionToGo.x, this.interpolationCurrentTime / this.interpolationTime);
-    // tslint:disable-next-line: max-line-length
-    const yPosition = Phaser.Math.Linear(this.draggedObjectStopPosition.y, this.draggedObjectPositionToGo.y, this.interpolationCurrentTime / this.interpolationTime);
+
+    const xPosition = Phaser.Math.Linear(this.draggedObjectStopPosition.x, this.draggedObjectPositionToGo.x,
+       this.interpolationCurrentTime / this.interpolationTime);
+    const yPosition = Phaser.Math.Linear(this.draggedObjectStopPosition.y, this.draggedObjectPositionToGo.y,
+       this.interpolationCurrentTime / this.interpolationTime);
+
     this.draggedObject.setPosition(xPosition, yPosition);
     if (this.interpolationCurrentTime >= this.interpolationTime) {
       this.draggedObject.setPosition(this.draggedObjectPositionToGo.x, this.draggedObjectPositionToGo.y);
@@ -590,8 +581,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   public updateGame(time: number, delta: number) {
-
-    // Phaser.Actions.RotateAroundDistance(asd, {x : 0, y:0}, )
     if (this.game.input.activePointer.isDown && markerDrawStarted) {
       this.dragObject(time, delta);
     }
