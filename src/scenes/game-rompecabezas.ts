@@ -1,11 +1,10 @@
 import { HorizontalContainer } from "../ui/horizontalContainer";
 import { UIUtils } from "./../utils/UIUtils";
 
-
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
   active: false,
-  visible: false,
   key: "Game",
+  visible: false,
 };
 
 let markerDrawStarted: boolean;
@@ -81,8 +80,8 @@ export class GameScene extends Phaser.Scene {
 
   public playSound(sound: Phaser.Sound.BaseSound) {
     if (this.isNonGameplaySoundAble === true) {
-      for (let i = 0; i < this.nonGameplaySounds.length; i++) {
-        if (this.nonGameplaySounds[i].key === sound.key) {
+      for (const nonGameplaySound of this.nonGameplaySounds) {
+        if (nonGameplaySound.key === sound.key) {
           sound.play();
         }
       }
@@ -210,7 +209,7 @@ export class GameScene extends Phaser.Scene {
         if (this.nextLevelButton.alpha !== 0 && this.canClickNextLevelButton === true) {
           this.nextLevelButton.setTexture("next-press");
           // TO DO Remove Cards Animation
-          // TO DO On Remove Cards End Call Next Exercise 
+          // TO DO On Remove Cards End Call Next Exercise
         }
       })
       .on("pointerup",
@@ -269,7 +268,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   public setCardsAlpha(alphaValue: number) {
-    for (const spawnedCard of this.spawnedCards){
+    for (const spawnedCard of this.spawnedCards) {
       spawnedCard.alpha = alphaValue;
     }
     this.motherCard.alpha = alphaValue;
@@ -336,7 +335,7 @@ export class GameScene extends Phaser.Scene {
     inGameSpawnedButton.y += (inGameSpawnedButton.displayHeight / 2);
     inGameSpawnedButton.setInteractive({ useHandCursor: true })
       .on("pointerover", () => { this.isMouseOverUIButton = true; })
-      .on("pointerout", () => { this.isMouseOverUIButton = false; })
+      .on("pointerout", () => { this.isMouseOverUIButton = false; });
   }
 
   public handleShowHelp() {
@@ -344,7 +343,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   public resetGame(resetConfig: boolean) {
-    this.canClickNextLevelButton = true; // ?? Vi esto y dije what? No suena bien :P 
+    this.canClickNextLevelButton = true; // ?? Vi esto y dije what? No suena bien :P
     this.flagHelpButton.alpha = 0;
     this.loseCounter = 0;
 
