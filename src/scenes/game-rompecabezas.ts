@@ -1,5 +1,6 @@
 import { HorizontalContainer } from "../ui/horizontalContainer";
 import { UIUtils } from "./../utils/UIUtils";
+import { Utils } from "phaser";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
   active: false,
@@ -46,6 +47,8 @@ export class GameScene extends Phaser.Scene {
   public motherCard: Phaser.GameObjects.Image;
   public slot: Phaser.Math.Vector2;
   public bIsInterpolationHappening: boolean;
+  public dropZone: Phaser.GameObjects.Graphics;
+  public bCardOnDropZone: boolean;
 
   public interpolationSpeed: number;
   public interpolationTime: number;
@@ -76,6 +79,7 @@ export class GameScene extends Phaser.Scene {
     this.interpolationSpeed = 1;
     this.interpolationCurrentTime = 0;
     this.draggedObjectPositionToGo = new Phaser.Math.Vector2(0, 0);
+    this.bCardOnDropZone = false;
   }
 
   public playSound(sound: Phaser.Sound.BaseSound) {
@@ -108,14 +112,14 @@ export class GameScene extends Phaser.Scene {
 
   public createGameplayLayer() {
 
-    const worldCenterX = this.game.scale.baseSize.width / 2;
-    const worldCenterY = this.game.scale.baseSize.height / 2;
+    const worldCenterX = this.game.scale.baseSize.width * 0.5;
+    const worldCenterY = this.game.scale.baseSize.height * 0.5;
 
     this.gameplayContainer = this.add.container(0, 0);
 
     this.createMotherCard(worldCenterX, worldCenterY);
-    this.spawnLevelCards(4);
     this.spawnDropZone();
+    this.spawnLevelCards(4);
     this.createUIButtons();
     this.createFXsLayer();
 
@@ -362,7 +366,7 @@ export class GameScene extends Phaser.Scene {
       .on("pointerover", () => { this.isMouseOverUIButton = true; })
       .on("pointerout", () => { this.isMouseOverUIButton = false; })
       .on("pointerdown", () => {
-        if (true) {
+        if (this.bCardOnDropZone) {
           this.checkButtonDown = true;
           this.updateButtonState(true);
           this.onPointerClickCheck();
@@ -377,7 +381,6 @@ export class GameScene extends Phaser.Scene {
           }
         }
       });
-
     this.checkButton.alpha = 1;
     this.gameplayContainer.add(this.checkButton);
     this.updateButtonState(false);
@@ -392,17 +395,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   public updateButtonState(clicked: boolean) {
-    // COMMENTED TO KEEP FUNCTIONALITY ON AFTER REMOVED VARIABLE this.currentconfig
-
-    // if (this.currentConfigID === 0) {
-    //   this.checkButton.setTexture(clicked ? "checklock-press" : "checklock-up");
-    // } else {
-    if (this.canWinTheGame()) {
-      this.checkButton.setTexture(clicked ? "checkright-press" : "checkright-up");
+    if (!this.bCardOnDropZone) {
+      this.checkButton.setTexture(clicked ? "checklock-press" : "checklock-up");
     } else {
-      this.checkButton.setTexture(clicked ? "checkwrong-press" : "checkwrong-up");
+      if (this.canWinTheGame()) {
+        this.checkButton.setTexture(clicked ? "checkright-press" : "checkright-up");
+      } else {
+        this.checkButton.setTexture(clicked ? "checkwrong-press" : "checkwrong-up");
+      }
     }
-    // }
   }
 
   public canWinTheGame(): boolean {
@@ -456,35 +457,27 @@ export class GameScene extends Phaser.Scene {
   }
 
   public spawnDropZone() {
-    const motherCardOffset = this.motherCard.displayHeight;
-    const worldCenterY = this.game.scale.baseSize.height / 2;
-    const motherCardPosition = worldCenterY - (motherCardOffset * 2) + (motherCardOffset / 2);
-    let yPosition = this.game.scale.baseSize.height / 2;
-    yPosition += motherCardOffset * 1.5;
-    const dropZoneSize = Math.abs(yPosition - motherCardPosition - (motherCardOffset / 2));
-    const dropZoneGraphics = this.add.graphics();
+    const motherCardHeight = this.motherCard.displayHeight;
+    const dropZoneYPosition = this.motherCard.y + (motherCardHeight * 0.5);
     const baseSizeWidth = this.game.scale.baseSize.width;
-    const baseSizeHeight = this.game.scale.baseSize.height;
-    dropZoneGraphics.fillRect(0, motherCardPosition,
-      baseSizeWidth, dropZoneSize);
-    dropZoneGraphics.fillStyle(0xFFFFFF, 0.2);
+    this.dropZone = this.add.graphics();
+    this.dropZone.fillRect(0, dropZoneYPosition,
+      baseSizeWidth, motherCardHeight * 2);
+    this.dropZone.fillStyle(0xFFFFFF, 0.2);
   }
 
-  public isInsideDropZone(verticalPositionToCheck: number): boolean {
-    const motherCardOffset = this.motherCard.displayHeight;
-    const worldCenterY = this.game.scale.baseSize.height / 2;
-    const motherCardPosition = worldCenterY - (motherCardOffset * 2) + (motherCardOffset / 2);
+  public getDropZoneYPosition(): number {
+    return this.dropZone.commandBuffer[2] + (this.getDropZoneHeight() * 0.5);
+  }
 
-    let yPosition = this.game.scale.baseSize.height / 2;
-    yPosition += motherCardOffset * 1.5;
-    const dropZoneSize = Math.abs(yPosition - motherCardPosition - (motherCardOffset / 2));
-    const dropZoneGraphics = this.add.graphics();
-    const baseSizeWidth = this.game.scale.baseSize.width;
-    const baseSizeHeight = this.game.scale.baseSize.height;
-    console.log("VerticalPosition " + verticalPositionToCheck);
-    console.log("motherCardPosition " + motherCardPosition);
-    console.log("yPosition " + yPosition);
-    if (verticalPositionToCheck >= motherCardPosition && verticalPositionToCheck <= yPosition) {
+  public getDropZoneHeight(): number {
+    return this.dropZone.commandBuffer[4];
+  }
+  public isInsideDropZone(verticalPositionToCheck: number): boolean {
+    const halfSize = this.getDropZoneHeight() * 0.5;
+    const yPosition = this.getDropZoneYPosition();
+    if (verticalPositionToCheck < yPosition + halfSize
+    && verticalPositionToCheck > yPosition - halfSize) {
       return true;
     }
     return false;
@@ -511,6 +504,9 @@ export class GameScene extends Phaser.Scene {
         if (this.bIsInterpolationHappening === true) {
           return;
         }
+        if (this.bCardOnDropZone && !this.isInsideDropZone(this.game.input.activePointer.y)){
+          return;
+        }
         markerDrawStarted = true;
         this.draggedObject = card;
         this.draggedObjectOriginalPosition.x = card.x;
@@ -527,8 +523,10 @@ export class GameScene extends Phaser.Scene {
 
             if (this.isInsideDropZone(this.game.input.activePointer.y)) {
               this.draggedObjectPositionToGo = this.slot;
+              this.bCardOnDropZone = true;
             } else {
               this.draggedObjectPositionToGo = this.draggedObjectOriginalPosition;
+              this.bCardOnDropZone = false;
             }
           }
         });
