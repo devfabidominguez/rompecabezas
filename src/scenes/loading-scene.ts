@@ -107,8 +107,12 @@ export class LoadingScene extends Phaser.Scene {
     this.load.image("menu-option-press", "assets/Menu_Option-Press.png");
     this.load.image("menu-option-up", "assets/Menu_Option-Up.png");
 
-    this.load.image("carta-hembra", "assets/Carta-01-A.png");
-    this.load.image("carta-macho", "assets/Carta-01-B.png");
+    this.load.image("abeja-amarilla-hembra", "assets/Carta-01-A.png");
+    this.load.image("abeja-amarilla-macho", "assets/Carta-01-B.png");
+    this.load.image("abeja-verde-hembra", "assets/Carta-02-A.png");
+    this.load.image("abeja-verde-macho", "assets/Carta-02-B.png");
+    this.load.image("abeja-rosa-hembra", "assets/Carta-03-A.png");
+    this.load.image("abeja-rosa-macho", "assets/Carta-03-B.png");
 
     this.load.audio("button-generic", "assets/sounds/Button_generic.wav");
     this.load.audio("validation-negative", "assets/sounds/Validation_Negative.wav");

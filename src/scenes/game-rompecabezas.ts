@@ -1,6 +1,6 @@
 import { HorizontalContainer } from "../ui/horizontalContainer";
 import { UIUtils } from "./../utils/UIUtils";
-import { Utils } from "phaser";
+import { Utils, Create } from "phaser";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
   active: false,
@@ -48,7 +48,7 @@ export class GameScene extends Phaser.Scene {
   public slot: Phaser.Math.Vector2;
   public bIsInterpolationHappening: boolean;
   public dropZone: Phaser.GameObjects.Graphics;
-  public bCardOnDropZone: boolean;
+  public cardOnDropZone: any;
 
   public interpolationSpeed: number;
   public interpolationTime: number;
@@ -79,7 +79,7 @@ export class GameScene extends Phaser.Scene {
     this.interpolationSpeed = 1;
     this.interpolationCurrentTime = 0;
     this.draggedObjectPositionToGo = new Phaser.Math.Vector2(0, 0);
-    this.bCardOnDropZone = false;
+    this.cardOnDropZone = null;
   }
 
   public playSound(sound: Phaser.Sound.BaseSound) {
@@ -366,7 +366,7 @@ export class GameScene extends Phaser.Scene {
       .on("pointerover", () => { this.isMouseOverUIButton = true; })
       .on("pointerout", () => { this.isMouseOverUIButton = false; })
       .on("pointerdown", () => {
-        if (this.bCardOnDropZone) {
+        if (this.cardOnDropZone != null) {
           this.checkButtonDown = true;
           this.updateButtonState(true);
           this.onPointerClickCheck();
@@ -395,7 +395,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   public updateButtonState(clicked: boolean) {
-    if (!this.bCardOnDropZone) {
+    if (this.cardOnDropZone == null) {
       this.checkButton.setTexture(clicked ? "checklock-press" : "checklock-up");
     } else {
       if (this.canWinTheGame()) {
@@ -449,7 +449,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   public createMotherCard(worldCenterX: number, worldCenterY: number) {
-    this.motherCard = this.add.image(worldCenterX, worldCenterY, "carta-hembra", 0);
+    this.motherCard = this.add.image(worldCenterX, worldCenterY, "abeja-amarilla-hembra", 0);
     this.motherCard.setScale(this.game.scale.baseSize.width / 1920 / 2.5);
     this.motherCard.y -= this.motherCard.displayHeight * 2;
 
@@ -492,10 +492,19 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  public getCardsToSpawn(): Card[] {
+    let Cards: Array<Card> = [
+    new Card("abeja-amarilla-hembra", true),
+    new Card("carta-macho", true),
+    new Card("carta-macho", true),
+    new Card("carta-macho", true)];
+    return Cards;
+  }
+
   public spawnLevelCards(cardsToSpawn: number) {
     const halfObjects = cardsToSpawn / 2;
     for (let i = 0; i < cardsToSpawn; i++) {
-      const card = this.add.image(0, 0, "carta-macho", 0);
+      const card = this.add.image(0, 0, "abeja-amarilla-macho", 0);
       this.spawnedCards[this.spawnedCards.length] = card;
       card.depth = 0;
       card.setInteractive();
@@ -504,31 +513,35 @@ export class GameScene extends Phaser.Scene {
         if (this.bIsInterpolationHappening === true) {
           return;
         }
-        if (this.bCardOnDropZone && !this.isInsideDropZone(this.game.input.activePointer.y)){
+        if (this.cardOnDropZone !== null && this.cardOnDropZone !== card){
           return;
         }
         markerDrawStarted = true;
         this.draggedObject = card;
-        this.draggedObjectOriginalPosition.x = card.x;
-        this.draggedObjectOriginalPosition.y = card.y;
+        if(this.cardOnDropZone !== card){
+          this.draggedObjectOriginalPosition.x = card.x;
+          this.draggedObjectOriginalPosition.y = card.y;
+        }
       });
 
       card.on("pointerup", () => {
-          if (markerDrawStarted === true) {
-            this.bIsInterpolationHappening = true;
-            this.interpolationCurrentTime = 0;
-            markerDrawStarted = false;
-            // tslint:disable-next-line: max-line-length
-            this.draggedObjectStopPosition = new Phaser.Math.Vector2(this.game.input.activePointer.x, this.game.input.activePointer.y);
+          if (!markerDrawStarted) {
+            return;
+          }
+          this.bIsInterpolationHappening = true;
+          this.interpolationCurrentTime = 0;
+          markerDrawStarted = false;
+          this.draggedObjectStopPosition = new Phaser.Math.Vector2(
+            this.game.input.activePointer.x,
+            this.game.input.activePointer.y);
 
-            if (this.isInsideDropZone(this.game.input.activePointer.y)) {
+          if (this.isInsideDropZone(this.game.input.activePointer.y)) {
               this.draggedObjectPositionToGo = this.slot;
-              this.bCardOnDropZone = true;
+              this.cardOnDropZone = card;
             } else {
               this.draggedObjectPositionToGo = this.draggedObjectOriginalPosition;
-              this.bCardOnDropZone = false;
+              this.cardOnDropZone = null;
             }
-          }
         });
 
       card.on("pointeroout", () => {
@@ -570,6 +583,7 @@ export class GameScene extends Phaser.Scene {
     if (this.interpolationCurrentTime >= this.interpolationTime) {
       this.draggedObject.setPosition(this.draggedObjectPositionToGo.x, this.draggedObjectPositionToGo.y);
       this.bIsInterpolationHappening = false;
+      this.updateButtonState(false);
     }
   }
 
