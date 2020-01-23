@@ -1,6 +1,9 @@
+import { Card } from "../Card";
 import { HorizontalContainer } from "../ui/horizontalContainer";
+import { PieceConfig } from "../PieceConfig";
+import { Create, Utils, } from "phaser";
 import { UIUtils } from "./../utils/UIUtils";
-import { Utils, Create } from "phaser";
+
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
   active: false,
@@ -8,7 +11,6 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
   visible: false,
 };
 
-let markerDrawStarted: boolean;
 
 export class GameScene extends Phaser.Scene {
 
@@ -19,7 +21,7 @@ export class GameScene extends Phaser.Scene {
   public flagHelpButton: Phaser.GameObjects.Image;
 
   public inGameMenuSpawnedButtonsHorzontalContainer: HorizontalContainer;
-  public spawnedCards: Phaser.GameObjects.Image[];
+  public spawnedCards: Card[];
   public inGameMenuSpawnedButtons: Phaser.GameObjects.Image[];
 
   public canClickNextLevelButton: boolean;
@@ -40,7 +42,7 @@ export class GameScene extends Phaser.Scene {
   public nonGameplaySounds: Phaser.Sound.BaseSound[];
   public isNonGameplaySoundAble: boolean;
 
-  public draggedObject: Phaser.GameObjects.Image;
+  public draggedObject: Card;
   public draggedObjectOriginalPosition: Phaser.Math.Vector2;
   public draggedObjectStopPosition: Phaser.Math.Vector2;
   public draggedObjectPositionToGo: Phaser.Math.Vector2;
@@ -54,6 +56,7 @@ export class GameScene extends Phaser.Scene {
   public interpolationTime: number;
   public interpolationCurrentTime: number;
   public isMouseOverUIButton: boolean;
+  public markerDrawStarted: boolean;
 
   constructor() {
     super(sceneConfig);
@@ -69,7 +72,7 @@ export class GameScene extends Phaser.Scene {
   public initializeArraysAndProperties() {
     this.spawnedCards = new Array();
     this.checkButtonDown = false;
-    markerDrawStarted = false;
+    this.markerDrawStarted = false;
     this.loseCounter = 0;
     this.isNonGameplaySoundAble = true;
     this.initializeSounds();
@@ -136,11 +139,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   public createBackgroundLayer() {
-    const halfWidth = this.game.scale.width * 0.5;
-    const halfHeight = this.game.scale.height * 0.5;
+    const halfWidth = this.game.canvas.width * 0.5;
+    const halfHeight = this.game.canvas.height * 0.5;
 
     this.background = this.add.image(halfWidth, halfHeight, "fondo");
-    this.background.setDisplaySize(this.game.scale.width, this.game.scale.height);
+    this.background.setDisplaySize(this.game.canvas.width, this.game.canvas.height);
   }
 
   public createUI() {
@@ -273,7 +276,7 @@ export class GameScene extends Phaser.Scene {
 
   public setCardsAlpha(alphaValue: number) {
     for (const spawnedCard of this.spawnedCards) {
-      spawnedCard.alpha = alphaValue;
+      spawnedCard.setAlpha(alphaValue);
     }
     this.motherCard.alpha = alphaValue;
   }
@@ -350,7 +353,8 @@ export class GameScene extends Phaser.Scene {
     this.canClickNextLevelButton = true; // ?? Vi esto y dije what? No suena bien :P
     this.flagHelpButton.alpha = 0;
     this.loseCounter = 0;
-
+    this.cardOnDropZone = null;
+    this.markerDrawStarted = false;
     this.nextLevelButton.alpha = 0;
     this.destroyCards();
     this.createMotherCard(this.game.scale.baseSize.width / 2, this.game.scale.baseSize.height / 2);
@@ -477,7 +481,7 @@ export class GameScene extends Phaser.Scene {
     const halfSize = this.getDropZoneHeight() * 0.5;
     const yPosition = this.getDropZoneYPosition();
     if (verticalPositionToCheck < yPosition + halfSize
-    && verticalPositionToCheck > yPosition - halfSize) {
+      && verticalPositionToCheck > yPosition - halfSize) {
       return true;
     }
     return false;
@@ -494,67 +498,29 @@ export class GameScene extends Phaser.Scene {
 
   public getCardsToSpawn(): Card[] {
     let Cards: Array<Card> = [
-    new Card("abeja-amarilla-hembra", true),
-    new Card("carta-macho", true),
-    new Card("carta-macho", true),
-    new Card("carta-macho", true)];
+      new Card("abeja-amarilla-hembra", true),
+      new Card("carta-macho", true),
+      new Card("carta-macho", true),
+      new Card("carta-macho", true)];
     return Cards;
   }
 
   public spawnLevelCards(cardsToSpawn: number) {
     const halfObjects = cardsToSpawn / 2;
     for (let i = 0; i < cardsToSpawn; i++) {
-      const card = this.add.image(0, 0, "abeja-amarilla-macho", 0);
+      const card = new Card("test", false);
       this.spawnedCards[this.spawnedCards.length] = card;
-      card.depth = 0;
-      card.setInteractive();
 
-      card.on("pointerdown", () => {
-        if (this.bIsInterpolationHappening === true) {
-          return;
-        }
-        if (this.cardOnDropZone !== null && this.cardOnDropZone !== card){
-          return;
-        }
-        markerDrawStarted = true;
-        this.draggedObject = card;
-        if(this.cardOnDropZone !== card){
-          this.draggedObjectOriginalPosition.x = card.x;
-          this.draggedObjectOriginalPosition.y = card.y;
-        }
-      });
+      card.spawnCard(0, 0, PieceConfig.constHard1Down, "abeja-amarilla",this);
 
-      card.on("pointerup", () => {
-          if (!markerDrawStarted) {
-            return;
-          }
-          this.bIsInterpolationHappening = true;
-          this.interpolationCurrentTime = 0;
-          markerDrawStarted = false;
-          this.draggedObjectStopPosition = new Phaser.Math.Vector2(
-            this.game.input.activePointer.x,
-            this.game.input.activePointer.y);
+      let yPosition = this.game.canvas.height / 2;
+      yPosition += card.piece.displayHeight * 1.5;
 
-          if (this.isInsideDropZone(this.game.input.activePointer.y)) {
-              this.draggedObjectPositionToGo = this.slot;
-              this.cardOnDropZone = card;
-            } else {
-              this.draggedObjectPositionToGo = this.draggedObjectOriginalPosition;
-              this.cardOnDropZone = null;
-            }
-        });
+      let xPosition = this.game.canvas.width / 2;
+      xPosition -= card.piece.displayWidth * halfObjects;
+      xPosition += card.piece.displayWidth * i + (card.piece.displayWidth / 2);
 
-      card.on("pointeroout", () => {
-          markerDrawStarted = false;
-        });
-      card.setScale(this.game.scale.baseSize.width / 1920 / 2.5);
-      let yPosition = this.game.scale.baseSize.height / 2;
-      yPosition += card.displayHeight * 1.5;
-
-      let xPosition = this.game.scale.baseSize.width / 2;
-      xPosition -= card.displayWidth * halfObjects;
-      xPosition += card.displayWidth * i + (card.displayWidth / 2);
-      card.setPosition(xPosition, yPosition);
+      card.setPosition(new Phaser.Math.Vector2(xPosition, yPosition));
     }
   }
 
@@ -575,13 +541,14 @@ export class GameScene extends Phaser.Scene {
     this.interpolationCurrentTime = Phaser.Math.Clamp(this.interpolationCurrentTime, 0, this.interpolationCurrentTime);
 
     const xPosition = Phaser.Math.Linear(this.draggedObjectStopPosition.x, this.draggedObjectPositionToGo.x,
-       this.interpolationCurrentTime / this.interpolationTime);
+      this.interpolationCurrentTime / this.interpolationTime);
     const yPosition = Phaser.Math.Linear(this.draggedObjectStopPosition.y, this.draggedObjectPositionToGo.y,
-       this.interpolationCurrentTime / this.interpolationTime);
+      this.interpolationCurrentTime / this.interpolationTime);
 
-    this.draggedObject.setPosition(xPosition, yPosition);
+    this.draggedObject.setPosition(new Phaser.Math.Vector2(xPosition, yPosition));
     if (this.interpolationCurrentTime >= this.interpolationTime) {
-      this.draggedObject.setPosition(this.draggedObjectPositionToGo.x, this.draggedObjectPositionToGo.y);
+      // tslint:disable-next-line: max-line-length
+      this.draggedObject.setPosition(new Phaser.Math.Vector2(this.draggedObjectPositionToGo.x, this.draggedObjectPositionToGo.y));
       this.bIsInterpolationHappening = false;
       this.updateButtonState(false);
     }
@@ -592,13 +559,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   public updateGame(time: number, delta: number) {
-    if (this.game.input.activePointer.isDown && markerDrawStarted) {
+    if (this.game.input.activePointer.isDown && this.markerDrawStarted) {
       this.dragObject(time, delta);
     }
   }
 
   public onPlayerLost() {
-    markerDrawStarted = false;
+    this.markerDrawStarted = false;
     this.loseCounter++;
     if (this.loseCounter >= 2) {
       this.flagHelpButton.alpha = 1;
@@ -610,7 +577,12 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    this.draggedObject.x = this.game.input.activePointer.x;
-    this.draggedObject.y = this.game.input.activePointer.y;
+    // Old Behaviour
+    // this.draggedObject.x = this.game.input.activePointer.x;
+    // this.draggedObject.y = this.game.input.activePointer.y;
+
+    // Este es el cambio necesario para soportar las cartas como las agrego fabi con mascara
+    // tslint:disable-next-line: max-line-length
+    this.draggedObject.setPosition(new Phaser.Math.Vector2(this.game.input.activePointer.x, this.game.input.activePointer.y));
   }
 }

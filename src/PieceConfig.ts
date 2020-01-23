@@ -1,5 +1,4 @@
-export class Card {
-
+export class PieceConfig {
     public static constHard1Down: string = "Carta_Hard1_Down";
     public static constHard1Up: string = "Carta_Hard1_Up";
     public static constHard2Down: string = "Carta_Hard2_Down";
@@ -15,11 +14,4 @@ export class Card {
     public static constPlanaDown: string = "Carta_Plana_Down";
     public static constPlanaUp: string = "Carta_Plana_Up";
 
-    public image: Phaser.GameObjects.Image;
-    public originSlot: Phaser.Math.Vector2;
-
-    // tslint:disable-next-line: no-empty
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string){
-        this.image = scene.add.image(x, y, texture);
-    }
 }

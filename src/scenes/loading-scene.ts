@@ -119,6 +119,9 @@ export class LoadingScene extends Phaser.Scene {
     this.load.audio("validation-positive", "assets/sounds/Validation_Positive.wav");
     this.load.audio("level-finished", "assets/sounds/Level_Finished.wav");
 
+    this.load.image("abeja-rosa-hembra", "assets/Carta-03-A.png");
+    this.load.image("abeja-rosa-macho", "assets/Carta-03-B.png");
+
     this.load.image("Carta_Hard1_Down", "assets/Carta_Hard1_Down.png");
     this.load.image("Carta_Hard1_Up", "assets/Carta_Hard1_Up.png");
 
@@ -139,5 +142,7 @@ export class LoadingScene extends Phaser.Scene {
 
     this.load.image("Carta_Plana_Down", "assets/Carta_Plana_Down.png");
     this.load.image("Carta_Plana_Up", "assets/Carta_Plana_Up.png");
+
+    this.load.image("abeja-amarilla", "assets/Abeja-Amarilla.png");
   }
 }
