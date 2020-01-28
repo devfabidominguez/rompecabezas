@@ -15,6 +15,6 @@ window.onload = () => {
             width: 1920,
         },
         scene: Scenes,
-        type: Phaser.WEBGL,
+        type: Phaser.AUTO,
         });
 };

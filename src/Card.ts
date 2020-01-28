@@ -1,25 +1,34 @@
 import { GameScene } from "./scenes/game-rompecabezas";
+import { Renderer, CANVAS } from "phaser";
+import scenes from "../Build/14-1-2020/src/scenes";
+import { Piece } from "./Piece";
 
 export class Card {
     public cardName: string;
     public bIsTheSolution: boolean;
     public piece: Phaser.GameObjects.Image;
     public animal: Phaser.GameObjects.Image;
+    public scene: Phaser.Scene;
+    public spawnNext: boolean;
+    public createPhoto: boolean;
+
     constructor(cardName: string, bIsTheSolution: boolean) {
         this.cardName = cardName;
         this.bIsTheSolution = bIsTheSolution;
+        this.createPhoto = true;
     }
 
-    public spawnCard(x: number, y: number, pieceTexture: string, animalTexture: string, scene: Phaser.Scene) {
+    // tslint:disable-next-line: max-line-length
+    public spawnCard(x: number, y: number, pieceTexture: string, animalTexture: string, scene: Phaser.Scene, spawnNext: boolean) {
         this.piece = scene.add.image(x, y, pieceTexture);
         this.animal = scene.add.image(x, y, animalTexture);
+        this.animal.depth = 1;
         this.piece.setInteractive();
-        this.piece.setScale(0.4);
-        this.animal.setScale(0.4);
         this.piece.y += this.animal.displayHeight / 4;
-
+        this.piece.depth = 1;
+        this.scene = scene;
+        this.spawnNext = spawnNext;
         this.animal.mask = this.piece.createBitmapMask();
-
         const gameScene = scene as GameScene;
         this.piece.on("pointerdown", () => {
             if (gameScene.bIsInterpolationHappening === true) {
@@ -40,6 +49,7 @@ export class Card {
             if (!gameScene.markerDrawStarted) {
                 return;
             }
+
             gameScene.bIsInterpolationHappening = true;
             gameScene.interpolationCurrentTime = 0;
             gameScene.markerDrawStarted = false;
@@ -65,7 +75,6 @@ export class Card {
                 gameScene.draggedObjectPositionToGo = gameScene.draggedObjectOriginalPosition;
                 gameScene.cardOnDropZone = null;
             }
-
         });
     }
 
@@ -75,17 +84,61 @@ export class Card {
 
         this.piece.x = this.animal.x;
         this.piece.y = this.animal.y + (this.animal.displayHeight / 4);
+
+        if (this.createPhoto === true) {
+            this.createPhoto = false;
+            // const gameScene = this.scene as GameScene;
+            // gameScene.spawnLevelCards();
+            const gameScene = this.scene as GameScene;
+            // tslint:disable-next-line: max-line-length
+            this.scene.game.renderer.snapshotArea(this.piece.x - (this.piece.width * 0.5), this.piece.y - (this.piece.height * 0.5), this.piece.width, this.piece.height, this.onPhotoTaken.bind(this));
+        }
     }
 
-    public setAlpha(value: number)
-    {
-        this.piece.alpha = value;
-        this.animal.alpha = value;
-    }
-
-    public destroy()
-    {
-        this.piece.destroy();
+    public onPhotoTaken(image: HTMLImageElement) {
+        const gameScene = this.scene as GameScene;
+        const textureName = gameScene.addNewSnapshotTexture(image);
+        this.animal.clearMask();
+        this.animal.alpha = 0;
         this.animal.destroy();
+        this.piece.setTexture(textureName);
+        gameScene.spawnLevelCards();
+    }
+
+    public startAnimation()
+    {
+        this.scene.tweens.add({
+            targets: this.piece,
+            // tslint:disable-next-line: object-literal-sort-keys
+            props: {
+              x: { value: this.piece.x + this.scene.game.canvas.width, ease: "Power2" },
+            },
+            duration: 500,
+            repeat: 0,
+            loop: 0,
+            onComplete: this.onCompleteStartAnimation.bind(this),
+          });
+    }
+
+    public onCompleteStartAnimation()
+    {
+        this.scene.tweens.add({
+            targets: this.piece,
+            // tslint:disable-next-line: object-literal-sort-keys
+            props: {
+              x: { value: this.piece.x - this.scene.game.canvas.width * 0.5, ease: "Power2" },
+            },
+            duration: 500,
+            repeat: 0,
+            loop: 0,
+          });
+    }
+
+    public setAlpha(value: number) {
+        this.piece.alpha = value;
+    }
+
+    public destroy() {
+        this.piece.destroy();
     }
 }

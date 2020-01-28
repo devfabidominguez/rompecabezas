@@ -58,6 +58,12 @@ export class GameScene extends Phaser.Scene {
   public isMouseOverUIButton: boolean;
   public markerDrawStarted: boolean;
 
+  public lampMask: Phaser.GameObjects.Graphics;
+  public snapshotText: string = "Snapshot";
+  public snapshowId: number = 0;
+  public cardsSpawned: number;
+  public cardsToSpawn: number;
+
   constructor() {
     super(sceneConfig);
   }
@@ -70,6 +76,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   public initializeArraysAndProperties() {
+    this.cardsSpawned = 0;
+    this.cardsToSpawn = 4;
     this.spawnedCards = new Array();
     this.checkButtonDown = false;
     this.markerDrawStarted = false;
@@ -108,13 +116,14 @@ export class GameScene extends Phaser.Scene {
 
   public startGame() {
     this.initializeArraysAndProperties();
+    const circle = document.createElement("canvas");
+
     this.createBackgroundLayer();
     this.createGameplayLayer();
     this.createUI();
   }
 
   public createGameplayLayer() {
-
     const worldCenterX = this.game.scale.baseSize.width * 0.5;
     const worldCenterY = this.game.scale.baseSize.height * 0.5;
 
@@ -122,7 +131,7 @@ export class GameScene extends Phaser.Scene {
 
     this.createMotherCard(worldCenterX, worldCenterY);
     this.spawnDropZone();
-    this.spawnLevelCards(4);
+    this.spawnLevelCards();
     this.createUIButtons();
     this.createFXsLayer();
 
@@ -134,8 +143,29 @@ export class GameScene extends Phaser.Scene {
     UIUtils.resizeApp(this.game);
   }
 
+  public addNewSnapshotTexture(image: HTMLImageElement): string {
+    const newTextureId = this.snapshotText + this.snapshowId.toString();
+    this.textures.addImage(newTextureId, image);
+    this.snapshowId++;
+    return newTextureId;
+  }
+
   public createFXsLayer() {
     // TO DO
+    // const halfWidth = this.game.canvas.width * 0.5;
+    // const halfHeight = this.game.canvas.height * 0.5;
+    // //tslint:disable-next-line: max-line-length
+    // const rect = this.add.sprite(halfWidth, halfHeight, "fondo");
+    // rect.tint = 0x000000;
+    // rect.alpha = 0.2;
+    // rect.depth = 2;
+    // // tslint:disable-next-line: max-line-length
+    // // A mask is a Graphics object
+    // this.lampMask = this.add.graphics();
+    // this.lampMask.setInteractive();
+    // this.lampMask.fillCircle(this.game.canvas.width / 2, this.game.canvas.height / 2, this.game.canvas.width / 10);
+    // rect.mask = this.lampMask.createBitmapMask();
+    // this.lampMask.depth = 2;
   }
 
   public createBackgroundLayer() {
@@ -144,6 +174,7 @@ export class GameScene extends Phaser.Scene {
 
     this.background = this.add.image(halfWidth, halfHeight, "fondo");
     this.background.setDisplaySize(this.game.canvas.width, this.game.canvas.height);
+    this.background.depth = 0;
   }
 
   public createUI() {
@@ -350,6 +381,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   public resetGame(resetConfig: boolean) {
+    this.cardsSpawned = 0;
     this.canClickNextLevelButton = true; // ?? Vi esto y dije what? No suena bien :P
     this.flagHelpButton.alpha = 0;
     this.loseCounter = 0;
@@ -358,7 +390,7 @@ export class GameScene extends Phaser.Scene {
     this.nextLevelButton.alpha = 0;
     this.destroyCards();
     this.createMotherCard(this.game.scale.baseSize.width / 2, this.game.scale.baseSize.height / 2);
-    this.spawnLevelCards(4);
+    this.spawnLevelCards();
     this.updateButtonState(false);
   }
 
@@ -456,7 +488,8 @@ export class GameScene extends Phaser.Scene {
     this.motherCard = this.add.image(worldCenterX, worldCenterY, "abeja-amarilla-hembra", 0);
     this.motherCard.setScale(this.game.scale.baseSize.width / 1920 / 2.5);
     this.motherCard.y -= this.motherCard.displayHeight * 2;
-
+    this.motherCard.depth = 1;
+    
     this.slot = new Phaser.Math.Vector2(this.motherCard.x, this.motherCard.y + this.motherCard.displayHeight);
   }
 
@@ -505,27 +538,42 @@ export class GameScene extends Phaser.Scene {
     return Cards;
   }
 
-  public spawnLevelCards(cardsToSpawn: number) {
-    const halfObjects = cardsToSpawn / 2;
-    for (let i = 0; i < cardsToSpawn; i++) {
-      const card = new Card("test", false);
-      this.spawnedCards[this.spawnedCards.length] = card;
+  public spawnLevelCards() {
+    const shouldSpawnNewCard = this.cardsSpawned < this.cardsToSpawn;
+    if (shouldSpawnNewCard === false) {
+      this.onCardsSpawned();
+      return;
+    }
 
-      card.spawnCard(0, 0, PieceConfig.constHard1Down, "abeja-amarilla",this);
+    const halfObjects = this.cardsToSpawn / 2;
+    const card = new Card("test", false);
+    this.spawnedCards[this.spawnedCards.length] = card;
+    card.spawnCard(0, 0, PieceConfig.constHard1Down, "abeja-small", this, shouldSpawnNewCard);
 
-      let yPosition = this.game.canvas.height / 2;
-      yPosition += card.piece.displayHeight * 1.5;
+    let yPosition = this.game.canvas.height / 2;
+    yPosition += card.piece.displayHeight * 1.5;
 
-      let xPosition = this.game.canvas.width / 2;
-      xPosition -= card.piece.displayWidth * halfObjects;
-      xPosition += card.piece.displayWidth * i + (card.piece.displayWidth / 2);
+    let xPosition = this.game.canvas.width / 2;
+    xPosition -= card.piece.displayWidth * halfObjects;
+    xPosition += card.piece.displayWidth * this.cardsSpawned + (card.piece.displayWidth / 2);
+    this.cardsSpawned++;
 
-      card.setPosition(new Phaser.Math.Vector2(xPosition, yPosition));
+    card.setPosition(new Phaser.Math.Vector2(xPosition, yPosition));
+  }
+
+  public onCardsSpawned()
+  {
+    // const camera = this.cameras.cameras[0];
+    // camera.flash(500, 143, 0, 255);
+    for(let i:number = 0; i < this.spawnedCards.length; i++)
+    {
+    //  this.spawnedCards[i].onCompleteStartAnimation();
     }
   }
 
   public update(time: number, delta: number) {
     super.update(delta, time);
+
     this.updateInterpolation(delta);
     this.updateGame(time, delta);
   }
@@ -534,9 +582,11 @@ export class GameScene extends Phaser.Scene {
     if (this.bIsInterpolationHappening === false) {
       return;
     }
+
     if (this.interpolationCurrentTime >= this.interpolationTime) {
       return;
     }
+
     this.interpolationCurrentTime += delta / 1000;
     this.interpolationCurrentTime = Phaser.Math.Clamp(this.interpolationCurrentTime, 0, this.interpolationCurrentTime);
 

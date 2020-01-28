@@ -114,7 +114,7 @@ export class LoadingScene extends Phaser.Scene {
     this.load.image("abeja-rosa-hembra", "assets/Carta-03-A.png");
     this.load.image("abeja-rosa-macho", "assets/Carta-03-B.png");
 
-    this.load.audio("button-generic", "assets/sounds/Button_generic.wav");
+    this.load.audio("button-generic", "assets/sounds/Button_Generic.wav");
     this.load.audio("validation-negative", "assets/sounds/Validation_Negative.wav");
     this.load.audio("validation-positive", "assets/sounds/Validation_Positive.wav");
     this.load.audio("level-finished", "assets/sounds/Level_Finished.wav");
@@ -122,8 +122,11 @@ export class LoadingScene extends Phaser.Scene {
     this.load.image("abeja-rosa-hembra", "assets/Carta-03-A.png");
     this.load.image("abeja-rosa-macho", "assets/Carta-03-B.png");
 
-    this.load.image("Carta_Hard1_Down", "assets/Carta_Hard1_Down.png");
-    this.load.image("Carta_Hard1_Up", "assets/Carta_Hard1_Up.png");
+    this.load.image("Carta_Hard1_Down", "assets/Carta_Hard1_Down_Small.png");
+    this.load.image("Carta_Hard1_Up", "assets/Carta_Hard1_Up_Small.png");
+
+    this.load.image("Carta_Hard1_Down-big", "assets/Carta_Hard1_Down.png");
+    this.load.image("Carta_Hard1_Up-big", "assets/Carta_Hard1_Up.png");
 
     this.load.image("Carta_Hard2_Down", "assets/Carta_Hard2_Down.png");
     this.load.image("Carta_Hard2_Up", "assets/Carta_Hard2_Up.png");
@@ -144,5 +147,6 @@ export class LoadingScene extends Phaser.Scene {
     this.load.image("Carta_Plana_Up", "assets/Carta_Plana_Up.png");
 
     this.load.image("abeja-amarilla", "assets/Abeja-Amarilla.png");
+    this.load.image("abeja-small", "assets/Abeja-Small.jpg");
   }
 }
